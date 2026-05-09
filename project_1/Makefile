@@ -9,7 +9,7 @@ CXXFLAGS =
 TARGET = puzzle_solver
 
 # Source files
-SRCS = main.cpp
+SRCS = main.cpp SearchAlgorithms.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)

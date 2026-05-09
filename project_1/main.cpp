@@ -1,10 +1,8 @@
 #include <iostream>
 #include <vector>
+#include "SearchAlgorithms.h"
 
 using namespace std;
-
-// Prints the given puzzle
-void printPuzzle(const vector<vector<int>> &puzzle);
 
 // Returns the default puzzle
 vector<vector<int>> getDefaultPuzzle();
@@ -44,22 +42,12 @@ int main() {
 
   int algoChoice;
   cin >> algoChoice;
+  cout << endl;
 
-  cout << "\nYou chose " << algoChoice << endl;
-  // TODO: Choose the actual algorithm
+  // Solve the puzzle
+  generalSearch(puzzle, algoChoice);
 
   return 0;
-}
-
-void printPuzzle(const vector<vector<int>> &puzzle) {
-  cout << "\nCurrent Puzzle State:" << endl;
-  for (int i = 0; i < puzzle.size(); i++) {
-    for (int j = 0; j < puzzle[i].size(); j++) {
-      cout << puzzle[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << endl;
 }
 
 vector<vector<int>> getDefaultPuzzle() {
