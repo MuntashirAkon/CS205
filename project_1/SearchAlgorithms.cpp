@@ -5,6 +5,9 @@
 
 using namespace std;
 
+// The goal state
+vector<vector<int>> goal_state = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
+
 // Prints the given puzzle
 void printPuzzle(const vector<vector<int>> &puzzle) {
   for (int i = 0; i < puzzle.size(); i++) {
@@ -17,19 +20,46 @@ void printPuzzle(const vector<vector<int>> &puzzle) {
 }
 
 // Checks if the current state matches the target goal state
-bool isGoal(const vector<vector<int>> &state) {
-  vector<vector<int>> goal_state = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
-  return state == goal_state;
-}
+bool isGoal(const vector<vector<int>> &state) { return state == goal_state; }
 
 int calculateMisplacedTile(const vector<vector<int>> &state) {
-  // TODO:
-  return 0;
+  int misplaced_count = 0;
+  for (int row = 0; row < 3; row++) {
+    for (int col = 0; col < 3; col++) {
+      // If the tile is not blank (0) and not in its goal position, increment
+      if (state[row][col] != 0 && state[row][col] != goal_state[row][col]) {
+        misplaced_count++;
+      }
+    }
+  }
+
+  return misplaced_count;
 }
 
 int calculateManhattanDistance(const vector<vector<int>> &state) {
-  // TODO:
-  return 0;
+  int total_distance = 0;
+
+  for (int row = 0; row < 3; row++) {
+    for (int col = 0; col < 3; col++) {
+      int value = state[row][col];
+
+      // We only calculate distance for the actual tiles (1-8), skipping the
+      // blank (0)
+      if (value != 0) {
+        // Determine where this value *should* be in the 3x3 grid
+        // (value - 1) gives us a 0-indexed position.
+        // Divide by 3 for the goal row, modulo 3 for the goal column.
+        int target_row = (value - 1) / 3;
+        int target_col = (value - 1) % 3;
+
+        // Add the absolute distances
+        total_distance +=
+            std::abs(row - target_row) + std::abs(col - target_col);
+      }
+    }
+  }
+
+  return total_distance;
 }
 
 // Utility function to calculate h(n) given algorithm
@@ -51,15 +81,15 @@ int calculateHeuristic(const vector<vector<int>> &state, int algorithm_choice) {
 }
 
 // Generates child nodes by moving the blank space up, down, left, and right
-vector<Node *> expand(Node *current_node, int algorithm_choice) {
-  vector<Node *> children;
+vector<Node> expand(const Node &current_node, int algorithm_choice) {
+  vector<Node> children;
   int zero_row = -1;
   int zero_col = -1;
 
   // Find the coordinates of the blank space
   for (int row = 0; row < 3; row++) {
     for (int col = 0; col < 3; col++) {
-      if (current_node->state[row][col] == 0) {
+      if (current_node.state[row][col] == 0) {
         zero_row = row;
         zero_col = col;
         break;
@@ -79,17 +109,17 @@ vector<Node *> expand(Node *current_node, int algorithm_choice) {
     // Check if the move stays within the 3x3 grid boundaries
     if (new_row >= 0 && new_row < 3 && new_col >= 0 && new_col < 3) {
       // Copy the current state
-      vector<vector<int>> new_state = current_node->state;
+      vector<vector<int>> new_state = current_node.state;
 
       // Slide the tile by swapping the 0 with the target tile
       swap(new_state[zero_row][zero_col], new_state[new_row][new_col]);
 
       // Calculate costs
-      int new_g = current_node->g + 1;
+      int new_g = current_node.g + 1;
       int new_h = calculateHeuristic(new_state, algorithm_choice);
 
       // Create the new child node
-      Node *child = new Node(new_state, current_node, new_g, new_h);
+      Node child = Node(new_state, new_g, new_h);
       children.push_back(child);
     }
   }
@@ -106,8 +136,8 @@ void generalSearch(const vector<vector<int>> &initial_state,
   int initial_h = calculateHeuristic(initial_state, algorithm_choice);
 
   // E.g. nodes = MAKE-QUEUE(MAKE-NODE(problem.INITIAL-STATE))
-  priority_queue<Node *, vector<Node *>, NodeComparator> nodes;
-  Node *starting_node = new Node(initial_state, nullptr, 0, initial_h);
+  priority_queue<Node, vector<Node>, greater<Node>> nodes;
+  Node starting_node = Node(initial_state, 0, initial_h);
   nodes.push(starting_node);
 
   int max_queue_size = 0;
@@ -126,44 +156,40 @@ void generalSearch(const vector<vector<int>> &initial_state,
     }
 
     // node = REMOVE-FRONT(nodes)
-    Node *node = nodes.top();
+    Node node = nodes.top();
     nodes.pop();
 
-    cout << "[Depth " << node->g << "] "
-         << "The best state to expand with a g(n) = " << node->g
-         << " and h(n) = " << node->h << " is:" << endl;
-    printPuzzle(node->state);
+    cout << "The best state to expand with a g(n) = " << node.g
+         << " and h(n) = " << node.h << " is:" << endl;
+    printPuzzle(node.state);
 
     // problem.GOAL-TEST(node.STATE)
-    if (isGoal(node->state)) {
-      cout << "Goal state!" << endl;
-      cout << "\nSolution depth: " << node->g << endl;
+    if (isGoal(node.state)) {
+      cout << "Reached goal state!" << endl;
+      cout << "Solution depth: " << node.g << endl;
       cout << "Number of nodes expanded: " << num_nodes_expanded << endl;
       cout << "Max queue size: " << max_queue_size << endl;
       return;
     }
 
     // Check if we've already seen this state
-    if (visited_states.find(node->state) != visited_states.end()) {
+    if (visited_states.find(node.state) != visited_states.end()) {
       // Skip if we've already evaluated this state
       continue;
     }
 
     // Add the current board state to our visited set
-    visited_states.insert(node->state);
+    visited_states.insert(node.state);
 
     num_nodes_expanded++;
 
     // nodes = QUEUEING-FUNCTION(nodes, EXPAND(node, problem.OPERATORS))
-    vector<Node *> children = expand(node, algorithm_choice);
-    for (Node *child : children) {
+    vector<Node> children = expand(node, algorithm_choice);
+    for (const Node& child : children) {
       // Check if the child state is already in visited_states
-      if (visited_states.find(child->state) == visited_states.end()) {
-        // Haven't visited yet.
+      if (visited_states.find(child.state) == visited_states.end()) {
+        // Haven't visited this child node yet.
         nodes.push(child);
-      } else {
-        // Already visited this node.
-        delete child;
       }
     }
   }
