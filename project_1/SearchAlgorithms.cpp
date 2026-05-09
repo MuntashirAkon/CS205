@@ -1,17 +1,33 @@
+#include "SearchAlgorithms.h"
 #include "Node.h"
 #include <cstdlib>
 #include <queue>
 #include <set>
+#include <vector>
 
 using namespace std;
 
 // The goal state
-vector<vector<int>> goal_state = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
+vector<vector<int>> goal_state;
+
+// Initialize the goal state based on the grid_size
+void initGoalState(int grid_size) {
+  goal_state.resize(grid_size, vector<int>(grid_size));
+  // Put 1..(grid_size*grid_size) first
+  for (int row = 0; row < grid_size; row++) {
+    for (int col = 0; col < grid_size; col++) {
+      goal_state[row][col] = row * grid_size + col + 1;
+    }
+  }
+  // Leave the last one blank
+  goal_state[grid_size - 1][grid_size - 1] = 0;
+}
 
 // Prints the given puzzle
 void printPuzzle(const vector<vector<int>> &puzzle) {
-  for (int i = 0; i < puzzle.size(); i++) {
-    for (int j = 0; j < puzzle[i].size(); j++) {
+  int grid_size = puzzle.size();
+  for (int i = 0; i < grid_size; i++) {
+    for (int j = 0; j < grid_size; j++) {
       cout << puzzle[i][j] << " ";
     }
     cout << endl;
@@ -23,10 +39,11 @@ void printPuzzle(const vector<vector<int>> &puzzle) {
 bool isGoal(const vector<vector<int>> &state) { return state == goal_state; }
 
 int calculateMisplacedTile(const vector<vector<int>> &state) {
+  int grid_size = state.size();
   int misplaced_count = 0;
-  for (int row = 0; row < 3; row++) {
-    for (int col = 0; col < 3; col++) {
-      // If the tile is not blank (0) and not in its goal position, increment
+  for (int row = 0; row < grid_size; row++) {
+    for (int col = 0; col < grid_size; col++) {
+      // If the tile is not blank and not in its goal position, increment count
       if (state[row][col] != 0 && state[row][col] != goal_state[row][col]) {
         misplaced_count++;
       }
@@ -37,20 +54,19 @@ int calculateMisplacedTile(const vector<vector<int>> &state) {
 }
 
 int calculateManhattanDistance(const vector<vector<int>> &state) {
+  int grid_size = state.size();
   int total_distance = 0;
-
-  for (int row = 0; row < 3; row++) {
-    for (int col = 0; col < 3; col++) {
+  for (int row = 0; row < grid_size; row++) {
+    for (int col = 0; col < grid_size; col++) {
       int value = state[row][col];
 
-      // We only calculate distance for the actual tiles (1-8), skipping the
-      // blank (0)
+      // Only calculate distance for the actual tiles
       if (value != 0) {
-        // Determine where this value *should* be in the 3x3 grid
-        // (value - 1) gives us a 0-indexed position.
-        // Divide by 3 for the goal row, modulo 3 for the goal column.
-        int target_row = (value - 1) / 3;
-        int target_col = (value - 1) % 3;
+        // Determine goal coordinates from value.
+        // Divide by grid_size for the goal row, modulo grid_size for the goal
+        // column.
+        int target_row = (value - 1) / grid_size;
+        int target_col = (value - 1) % grid_size;
 
         // Add the absolute distances
         total_distance +=
@@ -82,13 +98,14 @@ int calculateHeuristic(const vector<vector<int>> &state, int algorithm_choice) {
 
 // Generates child nodes by moving the blank space up, down, left, and right
 vector<Node> expand(const Node &current_node, int algorithm_choice) {
+  int grid_size = current_node.state.size();
   vector<Node> children;
   int zero_row = -1;
   int zero_col = -1;
 
   // Find the coordinates of the blank space
-  for (int row = 0; row < 3; row++) {
-    for (int col = 0; col < 3; col++) {
+  for (int row = 0; row < grid_size; row++) {
+    for (int col = 0; col < grid_size; col++) {
       if (current_node.state[row][col] == 0) {
         zero_row = row;
         zero_col = col;
@@ -106,8 +123,9 @@ vector<Node> expand(const Node &current_node, int algorithm_choice) {
     int new_row = zero_row + move.first;
     int new_col = zero_col + move.second;
 
-    // Check if the move stays within the 3x3 grid boundaries
-    if (new_row >= 0 && new_row < 3 && new_col >= 0 && new_col < 3) {
+    // Check if the move stays within the grid boundaries
+    if (new_row >= 0 && new_row < grid_size && new_col >= 0 &&
+        new_col < grid_size) {
       // Copy the current state
       vector<vector<int>> new_state = current_node.state;
 
@@ -130,6 +148,9 @@ vector<Node> expand(const Node &current_node, int algorithm_choice) {
 // Peform the actual search given initial state and the algorithm
 void generalSearch(const vector<vector<int>> &initial_state,
                    int algorithm_choice) {
+  // Initialize the goal state
+  initGoalState(initial_state.size());
+
   // Store the states that were previously visited
   set<vector<vector<int>>> visited_states;
   // Calculate initial h(n)
@@ -185,7 +206,7 @@ void generalSearch(const vector<vector<int>> &initial_state,
 
     // nodes = QUEUEING-FUNCTION(nodes, EXPAND(node, problem.OPERATORS))
     vector<Node> children = expand(node, algorithm_choice);
-    for (const Node& child : children) {
+    for (const Node &child : children) {
       // Check if the child state is already in visited_states
       if (visited_states.find(child.state) == visited_states.end()) {
         // Haven't visited this child node yet.

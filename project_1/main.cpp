@@ -11,7 +11,7 @@ vector<vector<int>> getDefaultPuzzle();
 vector<vector<int>> getCustomPuzzle();
 
 int main() {
-  cout << "Muntashir's 8-Puzzle Solver." << endl;
+  cout << "Muntashir's N-Puzzle Solver." << endl;
 
   int choice;
 
@@ -32,14 +32,16 @@ int main() {
 
   if (choice == 1) {
     puzzle = getDefaultPuzzle();
+    cout << "Using the default 3x3 puzzle:" << endl;
   } else if (choice == 2) {
     puzzle = getCustomPuzzle();
+    cout << "Your puzzle:" << endl;
   }
 
   // Print the puzzle we got from the user
   printPuzzle(puzzle);
 
-  while(true) {
+  while (true) {
     // Ask which algorithm to use
     cout << "Select algorithm." << endl;
     cout << "1. Uniform Cost Search" << endl;
@@ -53,7 +55,7 @@ int main() {
       break;
     }
     cout << "Invalid choice. Please try again." << endl;
-    // Continue asking until the user gets it right    
+    // Continue asking until the user gets it right
   }
 
   // Solve the puzzle
@@ -63,27 +65,28 @@ int main() {
 }
 
 vector<vector<int>> getDefaultPuzzle() {
-  cout << "Using default trivial puzzle..." << endl;
   // Generated from here: https://deniz.co/8-puzzle-solver/
   return {{0, 1, 5}, {3, 6, 2}, {4, 7, 8}};
 }
 
 vector<vector<int>> getCustomPuzzle() {
+  cout << "Enter grid size: " << endl;
+  int grid_size;
+  cin >> grid_size;
+
   cout << "Enter your puzzle." << endl;
-  cout << "Use 0 to denote the blank. Use space to separate items in each row. "
-          "Press enter when done with the row."
+  cout << "Use 0 to denote the blank. Use space to separate items in each row."
+          "Size of each row must match. Press enter when done with the row."
        << endl;
 
-  vector<vector<int>> customPuzzle(3, vector<int>(3));
+  vector<vector<int>> customPuzzle(grid_size, vector<int>(grid_size));
 
-  cout << "First row: ";
-  cin >> customPuzzle[0][0] >> customPuzzle[0][1] >> customPuzzle[0][2];
-
-  cout << "Second row: ";
-  cin >> customPuzzle[1][0] >> customPuzzle[1][1] >> customPuzzle[1][2];
-
-  cout << "Third row: ";
-  cin >> customPuzzle[2][0] >> customPuzzle[2][1] >> customPuzzle[2][2];
+  for (int row = 0; row < grid_size; row++) {
+    cout << "Row " << (row + 1) << ": ";
+    for (int col = 0; col < grid_size; col++) {
+      cin >> customPuzzle[row][col];
+    }
+  }
 
   return customPuzzle;
 }
