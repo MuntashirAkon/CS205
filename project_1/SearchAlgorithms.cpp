@@ -92,7 +92,7 @@ int calculateHeuristic(const vector<vector<int>> &state, int algorithm_choice) {
     return calculateManhattanDistance(state);
   } else {
     cout << "Invalid algorithm. Done." << endl;
-    exit(0);
+    exit(1);
   }
 }
 

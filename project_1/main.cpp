@@ -88,5 +88,18 @@ vector<vector<int>> getCustomPuzzle() {
     }
   }
 
+  // Validate user input
+  int puzzle_size = grid_size * grid_size - 1;
+  int total = 0;
+  for (int row = 0; row < grid_size; row++) {
+    for (int col = 0; col < grid_size; col++) {
+      total += customPuzzle[row][col];
+    }
+  }
+  if (total != (puzzle_size * (puzzle_size + 1) / 2)) {
+    cout << "Invalid puzzle. Done." << endl;
+    exit(1);
+  }
+
   return customPuzzle;
 }
