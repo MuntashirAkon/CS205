@@ -1,6 +1,6 @@
+#include "SearchAlgorithms.h"
 #include <iostream>
 #include <vector>
-#include "SearchAlgorithms.h"
 
 using namespace std;
 
@@ -16,36 +16,48 @@ int main() {
   int choice;
 
   vector<vector<int>> puzzle;
-  do {
+  while (true) {
     // Ask which puzzle to use
     cout << "Type '1' to use a default puzzle, or '2' to enter your own."
          << endl;
     cin >> choice;
-    if (choice == 1) {
-      puzzle = getDefaultPuzzle();
-    } else if (choice == 2) {
-      puzzle = getCustomPuzzle();
-    } else {
-      cout << "Invalid choice. Please try again." << endl;
-      // Continue asking until the user gets it right
+
+    if (choice == 1 || choice == 2) {
+      // Valid choice
+      break;
     }
-  } while (choice < 0 || choice > 2);
+    cout << "Invalid choice. Please try again." << endl;
+    // Continue asking until the user gets it right
+  }
+
+  if (choice == 1) {
+    puzzle = getDefaultPuzzle();
+  } else if (choice == 2) {
+    puzzle = getCustomPuzzle();
+  }
 
   // Print the puzzle we got from the user
   printPuzzle(puzzle);
 
-  // Ask which algorithm to use
-  cout << "Select algorithm." << endl;
-  cout << "1. Uniform Cost Search" << endl;
-  cout << "2. A* with Misplaced Tile Heuristic" << endl;
-  cout << "3. A* with Manhattan Distance Heuristic." << endl;
+  while(true) {
+    // Ask which algorithm to use
+    cout << "Select algorithm." << endl;
+    cout << "1. Uniform Cost Search" << endl;
+    cout << "2. A* with Misplaced Tile Heuristic" << endl;
+    cout << "3. A* with Manhattan Distance Heuristic." << endl;
+    cin >> choice;
+    cout << endl;
 
-  int algoChoice;
-  cin >> algoChoice;
-  cout << endl;
+    if (choice == 1 || choice == 2 || choice == 3) {
+      // Valid choice
+      break;
+    }
+    cout << "Invalid choice. Please try again." << endl;
+    // Continue asking until the user gets it right    
+  }
 
   // Solve the puzzle
-  generalSearch(puzzle, algoChoice);
+  generalSearch(puzzle, choice);
 
   return 0;
 }
