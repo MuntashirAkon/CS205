@@ -66,6 +66,60 @@ def leave_one_out_cross_validation(labels, features, current_features):
     # Calculate accuracy: correct / total * 100
     return (correct_predictions / num_instances) * 100
 
+def forward_selection(labels, features):
+    """
+    The forward selection greedy search algorithm.
+    """
+    num_features = features.shape[1]
+    current_features = []
+
+    # Track the global best data
+    global_best_features = []
+    global_best_accuracy = 0.0
+
+    # Loop through every level of the search tree
+    for _ in range(num_features):
+        best_local_feature = None
+        best_local_accuracy = -1.0
+
+        # Try adding each feature that isn't already selected
+        for feature_idx in range(num_features):
+            if feature_idx not in current_features:
+                # Create a temporary subset
+                candidate_set = current_features + [feature_idx]
+                display_set = [f + 1 for f in candidate_set]
+
+                # Evaluate the subset's accuracy
+                accuracy = leave_one_out_cross_validation(labels, features, candidate_set)
+                print(f"    Using feature(s) {{{','.join(map(str, display_set))}}} accuracy is {accuracy:.1f}%")
+
+                # Track the best option at this level
+                if accuracy > best_local_accuracy:
+                    best_local_accuracy = accuracy
+                    best_local_feature = feature_idx
+
+        # Store the best local feature to the search path
+        current_features.append(best_local_feature)
+        print()
+
+        # Update the global accuracy
+        if best_local_accuracy > global_best_accuracy:
+            global_best_accuracy = best_local_accuracy
+            global_best_features = list(current_features)
+        elif best_local_accuracy < global_best_accuracy:
+            # Drops in accuracy!
+            if len(current_features) != num_features:
+                print("(Warning, Accuracy has decreased! Continuing search in case of local maxima)")
+
+        if len(current_features) != num_features:
+            display_current = [f + 1 for f in current_features]
+            print(f"Feature set {{{','.join(map(str, display_current))}}} was best, accuracy is {best_local_accuracy:.1f}%\n")
+
+    # Print final result
+    display_global_best = [f + 1 for f in global_best_features]
+    print(f"Finished search!! The best feature subset is {{{','.join(map(str, display_global_best))}}}, "
+          f"which has an accuracy of {global_best_accuracy:.1f}%")
+
 def main():
     print("Welcome to Muntashir's Feature Selection Algorithm.")
     filename = input("Type in the name of the file to test: ")
@@ -81,10 +135,9 @@ def main():
     baseline = leave_one_out_cross_validation(labels, features, all_features)
     print(f"Running nearest neighbor with all {num_features} features, using leaving-one-out evaluation, I get an accuracy of {baseline:.1f}%\n")
 
-    print("Beginning search.")
+    print("Beginning search.\n")
     if choice == '1':
-        # TODO: Implement forward selection function
-        pass
+        forward_selection(labels, features)
     elif choice == '2':
         # TODO: Implement backward elimination function
         pass
