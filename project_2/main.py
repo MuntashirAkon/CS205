@@ -120,6 +120,64 @@ def forward_selection(labels, features):
     print(f"Finished search!! The best feature subset is {{{','.join(map(str, display_global_best))}}}, "
           f"which has an accuracy of {global_best_accuracy:.1f}%")
 
+def backward_elimination(labels, features):
+    """
+    The backward elimination greedy search algorithm.
+    """
+    num_features = features.shape[1]
+
+    # Start with all features active
+    current_features = list(range(num_features))
+
+    # Evaluate the baseline accuracy with the all features
+    initial_accuracy = leave_one_out_cross_validation(labels, features, current_features)
+
+    # Track the global best data
+    global_best_features = list(current_features)
+    global_best_accuracy = initial_accuracy
+
+    # Systematically eliminate features until only 1 remains
+    for _ in range(num_features - 1):
+        worst_local_feature = None
+        best_local_accuracy = -1.0
+
+        # Try removing each feature from the active set
+        for feature_idx in current_features:
+            # Create a temporary subset by removing feature_idx
+            candidate_set = [f for f in current_features if f != feature_idx]
+            display_set = [f + 1 for f in candidate_set]
+
+            # Evaluate the subset's accuracy
+            accuracy = leave_one_out_cross_validation(labels, features, candidate_set)
+            print(f"    Using feature(s) {{{','.join(map(str, display_set))}}} accuracy is {accuracy:.1f}%")
+
+            # Track the worst option at this level
+            if accuracy > best_local_accuracy:
+                best_local_accuracy = accuracy
+                worst_local_feature = feature_idx
+
+        # Remove the worst local feature from the search path
+        current_features.remove(worst_local_feature)
+        print()
+
+        # Update the global accuracy
+        if best_local_accuracy > global_best_accuracy:
+            global_best_accuracy = best_local_accuracy
+            global_best_features = list(current_features)
+        elif best_local_accuracy < global_best_accuracy:
+            # Drops in accuracy!
+            if len(current_features) > 1:
+                print("(Warning, Accuracy has decreased! Continuing search in case of local maxima)")
+
+        if len(current_features) > 1:
+            display_current = [f + 1 for f in current_features]
+            print(f"Feature set {{{','.join(map(str, display_current))}}} was best, accuracy is {best_local_accuracy:.1f}%\n")
+
+    # Print final result
+    display_global_best = [f + 1 for f in global_best_features]
+    print(f"Finished search!! The best feature subset is {{{','.join(map(str, display_global_best))}}}, "
+          f"which has an accuracy of {global_best_accuracy:.1f}%")
+
 def main():
     print("Welcome to Muntashir's Feature Selection Algorithm.")
     filename = input("Type in the name of the file to test: ")
@@ -139,8 +197,7 @@ def main():
     if choice == '1':
         forward_selection(labels, features)
     elif choice == '2':
-        # TODO: Implement backward elimination function
-        pass
+        backward_elimination(labels, features)
 
 if __name__ == "__main__":
     main()
