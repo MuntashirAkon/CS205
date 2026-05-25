@@ -19,7 +19,7 @@ def load_and_normalize_data(filename):
 
     return labels, normalized_features
 
-def distance_1nn(test_instance, training_set, current_features):
+def distance_nn(test_instance, training_set, current_features):
     """
     Calculate nearest neighbor using Eucledian distance.
     """
@@ -54,7 +54,7 @@ def leave_one_out_cross_validation(labels, features, current_features):
         training_labels = np.delete(labels, i, axis=0)
 
         # Find distance
-        best_match_idx = distance_1nn(test_row, training_set, current_features)
+        best_match_idx = distance_nn(test_row, training_set, current_features)
 
         # Retrieve the predicted label
         predicted_label = training_labels[best_match_idx]
@@ -66,11 +66,11 @@ def leave_one_out_cross_validation(labels, features, current_features):
     # Calculate accuracy: correct / total * 100
     return (correct_predictions / num_instances) * 100
 
-def forward_selection(labels, features):
+def forward_selection(labels, features, considered_features):
     """
     The forward selection greedy search algorithm.
     """
-    num_features = features.shape[1]
+    num_features = len(considered_features)
     current_features = []
 
     # Track the global best data
@@ -78,12 +78,12 @@ def forward_selection(labels, features):
     global_best_accuracy = 0.0
 
     # Loop through every level of the search tree
-    for _ in range(num_features):
+    for _ in considered_features:
         best_local_feature = None
         best_local_accuracy = -1.0
 
         # Try adding each feature that isn't already selected
-        for feature_idx in range(num_features):
+        for feature_idx in considered_features:
             if feature_idx not in current_features:
                 # Create a temporary subset
                 candidate_set = current_features + [feature_idx]
@@ -120,14 +120,12 @@ def forward_selection(labels, features):
     print(f"Finished search!! The best feature subset is {{{','.join(map(str, display_global_best))}}}, "
           f"which has an accuracy of {global_best_accuracy:.1f}%")
 
-def backward_elimination(labels, features):
+def backward_elimination(labels, features, considered_features):
     """
     The backward elimination greedy search algorithm.
     """
-    num_features = features.shape[1]
-
     # Start with all features active
-    current_features = list(range(num_features))
+    current_features = considered_features
 
     # Evaluate the baseline accuracy with the all features
     initial_accuracy = leave_one_out_cross_validation(labels, features, current_features)
@@ -137,7 +135,7 @@ def backward_elimination(labels, features):
     global_best_accuracy = initial_accuracy
 
     # Systematically eliminate features until only 1 remains
-    for _ in range(num_features - 1):
+    for _ in range(len(considered_features) - 1):
         worst_local_feature = None
         best_local_accuracy = -1.0
 
@@ -190,14 +188,15 @@ def main():
 
     # Run a quick check with all features first to match assignment trace formatting
     all_features = list(range(num_features))
+    # all_features = [1, 5, 6]
     baseline = leave_one_out_cross_validation(labels, features, all_features)
     print(f"Running nearest neighbor with all {num_features} features, using leaving-one-out evaluation, I get an accuracy of {baseline:.1f}%\n")
 
     print("Beginning search.\n")
     if choice == '1':
-        forward_selection(labels, features)
+        forward_selection(labels, features, all_features)
     elif choice == '2':
-        backward_elimination(labels, features)
+        backward_elimination(labels, features, all_features)
 
 if __name__ == "__main__":
     main()
