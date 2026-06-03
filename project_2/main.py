@@ -184,7 +184,7 @@ def main():
 
     labels, features = load_and_normalize_data(filename)
     num_instances, num_features = features.shape
-    print(f"\nThis dataset has {num_features} features with {num_instances} instances.\n")
+    print(f"\nThis dataset has {num_features} features (not including the class attribute), with {num_instances} instances.\n")
 
     # Run a quick check with all features first to match assignment trace formatting
     all_features = list(range(num_features))
